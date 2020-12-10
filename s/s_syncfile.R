@@ -22,11 +22,20 @@ update_info <- function(info, sync) {
     return(info)
 }
 
+estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
+    traj = af.traj(sync, chrom, pos, repl=info$repl)
+    print(traj)
+    est_p <- estimateSH(traj, Ne=Ne, t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
+    print(est_p)
+    return(est_p)
+}
+
 #        myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
-estimateSH_individual_loci <- function(sync, Ne, gen_levels) {
+estimateSH_individual_loci <- function(sync, Ne, info) {
     out = sync
     chrom_pos = cbind(info$chrom, info$pos)
-    print(chrom_pos)
+    s_vals = apply(chrom_pos, 1, function(x) {estimateSH_one_locus(sync, Ne, info, x[1], x[2])})
+    return(s_vals)
 }
 
 main = function() {
@@ -80,7 +89,8 @@ main = function() {
     print(est_p)
     print(str(est_p))
     # print(confint(est))
-    est_all_p <- estimateSH_individual_loci(mySync, mean_ne, info$gen_levels)
+    est_all_p <- estimateSH_individual_loci(mySync, mean_ne, info)
+    print(est_all_p)
 }
 
 main()
