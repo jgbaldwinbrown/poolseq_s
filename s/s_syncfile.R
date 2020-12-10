@@ -50,6 +50,17 @@ getp_from_ests <- function(ests) {
     return(unlist(p_vals))
 }
 
+est_full <- function(sync, Ne, info) {
+    est_list <- estimateSH_individual_loci(sync, Ne, info)
+    chrom_pos = est_list[[1]]
+    est_all_p = est_list[[2]]
+    s_vals = gets_from_ests(est_all_p)
+    p_vals = getp_from_ests(est_all_p)
+    out = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
+    colnames(out) = c("chrom", "pos", "s", "p.value")
+    return(out)
+}
+
 main = function() {
     
     args = commandArgs(trailingOnly = TRUE)
@@ -58,13 +69,7 @@ main = function() {
     info = get_info(infopath)
     mySync <- read.sync(file=syncpath, gen=info$gen, repl=info$repl)
     info = update_info(info, mySync)
-    # print("mysync")
-    # print(str(mySync))
-    # print("info")
-    # print(str(info))
     myTraj = af.traj(mySync, info$chrom, info$pos, info$repl)
-    # print("mytraj")
-    # print(myTraj)
     est_nes = rep(NA, length(info$repl_levels))
     for (repl in info$repl_levels) {
         myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
@@ -80,37 +85,10 @@ main = function() {
             covt=myCov_repltemp[,cov_gen2_name], 
             t=info$gen_levels[length(info$gen_levels)] - info$gen_levels[1]
         )
-        # est_nes[repl] = estimateNe(
-        #     p0=mytraj1[,traj_gen1_name], 
-        #     pt=mytraj1[,"F10"], 
-        #     cov0=mycov1[,"F0.R1.cov"], 
-        #     covt=mycov1[,"F10.R1.cov"], 
-        #     t=10
-        # )
         # note: add options when ready: Ncensus=1000, poolSize=c(300, 300)
     }
     mean_ne = mean(est_nes)
-    # est_ne = estimateNe(p0=mytraj1[,"F0"], pt=mytraj1[,"F10"], cov0=mycov1[,"F0.R1.cov"], covt=mycov1[,"F10.R1.cov"], t=10, Ncensus=1000, poolSize=c(300, 300))
-    
-    # print("est_nes")
-    # print(est_nes)
-    # print(str(est_nes))
-    
-    # est_p <- estimateSH(myTraj, Ne=mean_ne, t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
-    # print("est_p")
-    # print(est_p)
-    # print(str(est_p))
-    # print(confint(est))
-    est_list <- estimateSH_individual_loci(mySync, mean_ne, info)
-    chrom_pos = est_list[[1]]
-    est_all_p = est_list[[2]]
-    # print(chrom_pos)
-    # print(est_all_p)
-    s_vals = gets_from_ests(est_all_p)
-    p_vals = getp_from_ests(est_all_p)
-    # print(p_vals)
-    # print(s_vals)
-    out = cbind(chrom_pos, s_vals, p_vals)
+    out = est_full(mySync, mean_ne, info)
     print(out)
 }
 
