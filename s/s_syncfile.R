@@ -24,7 +24,9 @@ update_info <- function(info, sync) {
 
 #        myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
 estimateSH_individual_loci <- function(sync, Ne, gen_levels) {
-    sync
+    out = sync
+    chrom_pos = cbind(info$chrom, info$pos)
+    print(chrom_pos)
 }
 
 main = function() {
@@ -73,12 +75,12 @@ main = function() {
     print(est_nes)
     print(str(est_nes))
     
-    est_all_p <- estimateSH_windows(myTraj, mean_ne, info$gen_levels)
     est_p <- estimateSH(myTraj, Ne=mean_ne, t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
     print("est_p")
     print(est_p)
     print(str(est_p))
     # print(confint(est))
+    est_all_p <- estimateSH_individual_loci(mySync, mean_ne, info$gen_levels)
 }
 
 main()
