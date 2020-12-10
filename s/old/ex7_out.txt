@@ -1,0 +1,29 @@
+Reading sync file ...
+Extracting biallelic counts ...
+Creating result object ...
+Formal class 'sync' [package "poolSeq"] with 5 slots
+  ..@ gen         : num [1:6] 0 0 10 10 20 20
+  ..@ repl        : num [1:6] 0 0 10 10 20 20
+  ..@ isAF        : logi [1:6] TRUE FALSE TRUE FALSE TRUE FALSE
+  ..@ polarization: chr "minor"
+  ..@ alleles     :Classes ‘data.table’ and 'data.frame':	4 obs. of  13 variables:
+  .. ..$ chr         : chr [1:4] "2R" "2R" "3R" "3R"
+  .. ..$ pos         : int [1:4] 2304 2305 2304 2305
+  .. ..$ ref         : chr [1:4] "N" "N" "N" "N"
+  .. ..$ major       : chr [1:4] "C" "G" "C" "G"
+  .. ..$ minor       : chr [1:4] "G" "C" "G" "C"
+  .. ..$ rising      : chr [1:4] NA NA NA NA
+  .. ..$ F0.R0.freq  : num [1:4] 0.188 0.125 0.188 0.125
+  .. ..$ F0.R0.cov   : num [1:4] 16 16 16 16
+  .. ..$ F10.R10.freq: num [1:4] 0 0.375 0 0.364
+  .. ..$ F10.R10.cov : num [1:4] 12 24 13 22
+  .. ..$ F20.R20.freq: num [1:4] 0.1154 0.3333 0.2 0.0667
+  .. ..$ F20.R20.cov : num [1:4] 26 21 15 15
+  .. ..$ posID       : chr [1:4] "2R.2304" "2R.2305" "3R.2304" "3R.2305"
+  .. ..- attr(*, ".internal.selfref")=<externalptr> 
+  .. ..- attr(*, "sorted")= chr "posID"
+ chr [1:4] "2R" "2R" "3R" "3R"
+ int [1:4] 2304 2305 2304 2305
+ int [1:6] 1 1 1 2 2 2
+[1] "traj1 start"
+recover called non-interactively; frames dumped, use debugger() to view

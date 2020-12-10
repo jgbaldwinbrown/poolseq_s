@@ -1,0 +1,9 @@
+all alignments are in big bam file
+all associations are in tab file
+subset tabfile to pops of interest
+order these
+get allele frequencies out
+    in 1 vcf containing all allele freqs of interest?
+    mpileup -> sync?
+calculate trajectories
+plot p values

@@ -1,0 +1,15 @@
+    1. calculate effective population size
+X       1. get allele frequencies at each time point
+X       2. get census pop size at each time point
+X       3. calculate pop size over full time interval based on loss of heterozygosity
+X       4. calculate eff pop size based on census pop size harmonic mean
+        5. compare values, make sure they are reasonably close
+    2. generate neutral simulation
+X       1. get haplotypes of initial pop (known from indiv seq)
+        2. run mimicree with known haplotypes and eff pop size
+    3. calculate allele freq distribs based on neutral sim
+        1. ~1000 replicates?
+        2. for each polymorphic locus, calc allele freq for each replicate
+        3. fit (gamma?) distrib to allele freqs
+    4. compare actual allele freq to allele freq distrib, get p-value
+    5. combine p-values using fisher's method
