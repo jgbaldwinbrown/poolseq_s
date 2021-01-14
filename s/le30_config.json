@@ -1,0 +1,82 @@
+[
+    {
+        "outpath": "black_tle30_names_bitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "black_tle30_names_bitted_repall.split.sync.gz",
+            "INFO_IN": "black_pooled_info_bitted.txt",
+            "TIME_SERIES_OUT": "black_pooled_bitted_tle30_s_coeff.txt"
+        }
+    },
+    {
+        "outpath": "black_tle30_names_unbitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "black_tle30_names_unbitted_repall.split.sync.gz",
+            "INFO_IN": "black_pooled_info_unbitted.txt",
+            "TIME_SERIES_OUT": "black_pooled_unbitted_tle30_s_coeff.txt"
+        }
+    },
+    {
+        "outpath": "white_tle30_names_bitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "white_tle30_names_bitted_repall.split.sync.gz",
+            "INFO_IN": "white_pooled_info_bitted.txt",
+            "TIME_SERIES_OUT": "white_pooled_bitted_tle30_s_coeff.txt"
+        }
+    },
+    {
+        "outpath": "white_tle30_names_unbitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "white_tle30_names_unbitted_repall.split.sync.gz",
+            "INFO_IN": "white_pooled_info_unbitted.txt",
+            "TIME_SERIES_OUT": "white_pooled_unbitted_tle30_s_coeff.txt"
+        }
+    },
+    {
+        "outpath": "feral_tle30_names_bitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "feral_tle30_names_bitted_repall.split.sync.gz",
+            "INFO_IN": "feral_pooled_info_bitted.txt",
+            "TIME_SERIES_OUT": "feral_pooled_bitted_tle30_s_coeff.txt"
+        }
+    },
+    {
+        "outpath": "feral_tle30_names_unbitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "feral_tle30_names_unbitted_repall.split.sync.gz",
+            "INFO_IN": "feral_pooled_info_unbitted.txt",
+            "TIME_SERIES_OUT": "feral_pooled_unbitted_tle30_s_coeff.txt"
+        }
+    },
+    {
+        "outpath": "figurita_tle30_names_bitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "figurita_tle30_names_bitted_repall.split.sync.gz",
+            "INFO_IN": "figurita_pooled_info_bitted.txt",
+            "TIME_SERIES_OUT": "figurita_pooled_bitted_tle30_s_coeff.txt"
+        }
+    },
+    {
+        "outpath": "figurita_tle30_names_unbitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "figurita_tle30_names_unbitted_repall.split.sync.gz",
+            "INFO_IN": "figurita_pooled_info_unbitted.txt",
+            "TIME_SERIES_OUT": "figurita_pooled_unbitted_tle30_s_coeff.txt"
+        }
+    },
+    {
+        "outpath": "runt_tle30_names_bitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "runt_tle30_names_bitted_repall.split.sync.gz",
+            "INFO_IN": "runt_pooled_info_bitted.txt",
+            "TIME_SERIES_OUT": "runt_pooled_bitted_tle30_s_coeff.txt"
+        }
+    },
+    {
+        "outpath": "runt_tle30_names_unbitted_repall_s_syncfile.sh",
+        "replacements": {
+            "SYNC_IN": "runt_tle30_names_unbitted_repall.split.sync.gz",
+            "INFO_IN": "runt_pooled_info_unbitted.txt",
+            "TIME_SERIES_OUT": "runt_pooled_unbitted_tle30_s_coeff.txt"
+        }
+    }
+]
