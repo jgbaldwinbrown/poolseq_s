@@ -13,5 +13,5 @@ export MC_CORES="$NUM_CORES"
 s_syncfile \
     SYNC_IN \
     INFO_IN \
-> TIME_SERIES_OUT
+    TIME_SERIES_OUT
 touch TIME_SERIES_OUT.done
