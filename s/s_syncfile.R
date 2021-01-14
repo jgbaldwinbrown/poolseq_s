@@ -66,6 +66,7 @@ main = function() {
     args = commandArgs(trailingOnly = TRUE)
     syncpath = args[1]
     infopath = args[2]
+    outpath = args[3]
     info = get_info(infopath)
     mySync <- read.sync(file=syncpath, gen=info$gen, repl=info$repl)
     info = update_info(info, mySync)
@@ -89,7 +90,8 @@ main = function() {
     }
     mean_ne = mean(est_nes)
     out = est_full(mySync, mean_ne, info)
-    print(out)
+    # print(out)
+    write.table(out, outpath, sep="\t", quote=FALSE, row.names=FALSE)
 }
 
 main()
