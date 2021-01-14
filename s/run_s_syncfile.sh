@@ -10,7 +10,7 @@ set -e
 NUM_CORES="${SLURM_CPUS_ON_NODE}"
 export MC_CORES="$NUM_CORES"
 
-./s_syncfile.R \
+s_syncfile \
     SYNC_IN \
     INFO_IN \
 > TIME_SERIES_OUT
