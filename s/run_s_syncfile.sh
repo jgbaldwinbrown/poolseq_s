@@ -8,7 +8,8 @@
 set -e
 
 NUM_CORES="${SLURM_CPUS_ON_NODE}"
-export MC_CORES="$NUM_CORES"
+CORES_TO_USE=`echo "${NUM_CORES} / 2" | bc`
+export MC_CORES="$CORES_TO_USE"
 
 s_syncfile \
     SYNC_IN \
