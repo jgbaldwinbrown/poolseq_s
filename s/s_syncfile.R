@@ -10,8 +10,8 @@ get_info <- function(infopath) {
     names(info) = c("chrom", "pos", "gen", "repl", "gen_levels", "repl_levels", "chrom_levels", "pos_levels")
     info$gen = info_unstructured$gen
     info$repl = info_unstructured$repl
-    info$gen_levels = as.numeric(sort(levels(factor(info_unstructured$gen))))
-    info$repl_levels = as.numeric(sort(levels(factor(info_unstructured$repl))))
+    info$gen_levels = sort(as.numeric(levels(factor(info_unstructured$gen))))
+    info$repl_levels = sort(as.numeric(levels(factor(info_unstructured$repl))))
     return(info)
 }
 
