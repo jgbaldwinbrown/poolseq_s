@@ -71,6 +71,12 @@ main = function() {
     mySync <- read.sync(file=syncpath, gen=info$gen, repl=info$repl)
     info = update_info(info, mySync)
     myTraj = af.traj(mySync, info$chrom, info$pos, info$repl)
+    
+    outdir = paste(outpath, "_tempdir/", sep="")
+    if (! dir.exists(outdir)) {
+        dir.create(outdir)
+    }
+    
     est_nes = rep(NA, length(info$repl_levels))
     for (repl in info$repl_levels) {
         myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
@@ -79,16 +85,35 @@ main = function() {
         traj_gen2_name = paste("F", as.character(info$gen_levels[length(info$gen_levels)]), sep="")
         cov_gen1_name = paste("F", as.character(info$gen_levels[1]), ".R", as.character(repl), ".cov", sep="")
         cov_gen2_name = paste("F", as.character(info$gen_levels[length(info$gen_levels)]), ".R", as.character(repl), ".cov", sep="")
-        est_nes[repl] = estimateNe(
-            p0=myTraj_repltemp[,traj_gen1_name], 
-            pt=myTraj_repltemp[,traj_gen2_name], 
-            cov0=myCov_repltemp[,cov_gen1_name], 
-            covt=myCov_repltemp[,cov_gen2_name], 
-            t=info$gen_levels[length(info$gen_levels)] - info$gen_levels[1]
-        )
+        repl_ne_outpath = paste(outdir, outpath, "_", cov_gen1_name, "_ne.txt", sep="")
+        repl_ne_outpath_done = paste(outdir, outpath, "_", cov_gen1_name, "_ne.txt.done", sep="")
+        if (file.exists(repl_ne_outpath_done)) {
+            est_nes[repl] = scan(repl_ne_outpath)
+        } else {
+            est_nes[repl] = estimateNe(
+                p0=myTraj_repltemp[,traj_gen1_name], 
+                pt=myTraj_repltemp[,traj_gen2_name], 
+                cov0=myCov_repltemp[,cov_gen1_name], 
+                covt=myCov_repltemp[,cov_gen2_name], 
+                t=info$gen_levels[length(info$gen_levels)] - info$gen_levels[1]
+            )
+            write(est_nes[repl], repl_ne_outpath, sep = "\t")
+            write(est_nes[repl], repl_ne_outpath_done, sep = "\t")
+        }
         # note: add options when ready: Ncensus=1000, poolSize=c(300, 300)
     }
+    
+    ne_outpath = paste(outdir, outpath, "_ne.txt", sep="")
+    ne_outpath_done = paste(outdir, outpath, "_ne.txt.done", sep="")
+    write(est_nes, ne_outpath, sep = "\t")
+    write(est_nes, ne_outpath_done, sep = "\t")
+    
     mean_ne = mean(est_nes)
+    mean_ne_outpath = paste(outdir, outpath, "_mean_ne.txt", sep="")
+    mean_ne_outpath_done = paste(outdir, outpath, "_mean_ne.txt.done", sep="")
+    write(mean_ne, mean_ne_outpath, sep = "\t")
+    write(mean_ne, mean_ne_outpath_done, sep = "\t")
+    
     out = est_full(mySync, mean_ne, info)
     # print(out)
     write.table(out, outpath, sep="\t", quote=FALSE, row.names=FALSE)
