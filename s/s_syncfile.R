@@ -51,19 +51,21 @@ estimateSH_individual_loci_savewrapper <- function(sync, Ne, info, outpath) {
     full_output_list = vector(mode = "list", length = length(iteration_series))
     j = 1
     for (i in iteration_series) {
-        temppath_est_sh = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".txt")
-        temppath_est_sh_done = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".txt.done")
+        temppath_est_sh = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".RData", sep="")
+        temppath_est_sh_done = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".RData.done", sep="")
         if (! file.exists(temppath_est_sh_done)) {
             mini_info = info
             mini_info$chrom = info$chrom[i:min((i+1000), length(info$chrom))]
             mini_info$pos = info$pos[i:min((i+1000), length(info$pos))]
             full_output_list[[j]] = estimateSH_individual_loci(sync, Ne, mini_info)
+            temp = full_output_list[[j]]
+            saveRDS(temp, file = temppath_est_sh)
         } else {
-            full_output_list[[j]] = load(temppath_est_sh)
+            full_output_list[[j]] = readRDS(temppath_est_sh)
         }
     j = j + 1;
     }
-    print(full_output_list)
+    # print(full_output_list)
     return(combine_est_sh_outputs(full_output_list))
 }
 
@@ -79,7 +81,7 @@ getp_from_ests <- function(ests) {
 
 est_full <- function(sync, Ne, info) {
     est_list <- estimateSH_individual_loci(sync, Ne, info)
-    print(est_list)
+    # print(est_list)
     chrom_pos = est_list[[1]]
     est_all_p = est_list[[2]]
     s_vals = gets_from_ests(est_all_p)
@@ -91,13 +93,13 @@ est_full <- function(sync, Ne, info) {
 
 est_full_save <- function(sync, Ne, info, outpath) {
     est_list <- estimateSH_individual_loci_savewrapper(sync, Ne, info, outpath)
-    print(est_list)
+    # print(est_list)
     chrom_pos = est_list[[1]]
     est_all_p = est_list[[2]]
     s_vals = gets_from_ests(est_all_p)
     p_vals = getp_from_ests(est_all_p)
     out = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
-    print(out)
+    # print(out)
     colnames(out) = c("chrom", "pos", "s", "p.value")
     return(out)
 }
