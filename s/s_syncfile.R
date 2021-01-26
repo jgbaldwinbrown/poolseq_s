@@ -60,6 +60,7 @@ estimateSH_individual_loci_savewrapper <- function(sync, Ne, info, outpath) {
             full_output_list[[j]] = estimateSH_individual_loci(sync, Ne, mini_info)
             temp = full_output_list[[j]]
             saveRDS(temp, file = temppath_est_sh)
+            file.create(temppath_est_sh_done)
         } else {
             full_output_list[[j]] = readRDS(temppath_est_sh)
         }
