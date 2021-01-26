@@ -33,11 +33,38 @@ estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
 
 #        myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
 estimateSH_individual_loci <- function(sync, Ne, info) {
-    out = sync
     chrom_pos = cbind(info$chrom, info$pos)
     chrom_pos_list = split(chrom_pos, seq(nrow(chrom_pos)))
     s_vals = mclapply(chrom_pos_list, function(x) {estimateSH_one_locus(sync, Ne, info, x[1], x[2])})
     return(list(chrom_pos, s_vals))
+}
+
+combine_est_sh_outputs <- function(full_output_list) {
+    chrom_pos_list = mclapply(full_output_list, function(x) x[[1]])
+    s_vals_list = mclapply(full_output_list, function(x) x[[2]][[1]])
+    chrom_pos = do.call("rbind", chrom_pos_list)
+    return(list(chrom_pos, s_vals_list))
+}
+
+estimateSH_individual_loci_savewrapper <- function(sync, Ne, info, outpath) {
+    iteration_series = seq(1,length(info$chrom),1000)
+    full_output_list = vector(mode = "list", length = length(iteration_series))
+    j = 1
+    for (i in iteration_series) {
+        temppath_est_sh = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".txt")
+        temppath_est_sh_done = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".txt.done")
+        if (! file.exists(temppath_est_sh_done)) {
+            mini_info = info
+            mini_info$chrom = info$chrom[i:min((i+1000), length(info$chrom))]
+            mini_info$pos = info$pos[i:min((i+1000), length(info$pos))]
+            full_output_list[[j]] = estimateSH_individual_loci(sync, Ne, mini_info)
+        } else {
+            full_output_list[[j]] = load(temppath_est_sh)
+        }
+    j = j + 1;
+    }
+    print(full_output_list)
+    return(combine_est_sh_outputs(full_output_list))
 }
 
 gets_from_ests <- function(ests) {
@@ -52,11 +79,25 @@ getp_from_ests <- function(ests) {
 
 est_full <- function(sync, Ne, info) {
     est_list <- estimateSH_individual_loci(sync, Ne, info)
+    print(est_list)
     chrom_pos = est_list[[1]]
     est_all_p = est_list[[2]]
     s_vals = gets_from_ests(est_all_p)
     p_vals = getp_from_ests(est_all_p)
     out = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
+    colnames(out) = c("chrom", "pos", "s", "p.value")
+    return(out)
+}
+
+est_full_save <- function(sync, Ne, info, outpath) {
+    est_list <- estimateSH_individual_loci_savewrapper(sync, Ne, info, outpath)
+    print(est_list)
+    chrom_pos = est_list[[1]]
+    est_all_p = est_list[[2]]
+    s_vals = gets_from_ests(est_all_p)
+    p_vals = getp_from_ests(est_all_p)
+    out = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
+    print(out)
     colnames(out) = c("chrom", "pos", "s", "p.value")
     return(out)
 }
@@ -114,7 +155,8 @@ main = function() {
     write(mean_ne, mean_ne_outpath, sep = "\t")
     write(mean_ne, mean_ne_outpath_done, sep = "\t")
     
-    out = est_full(mySync, mean_ne, info)
+    # out = est_full(mySync, mean_ne, info)
+    out = est_full_save(mySync, mean_ne, info, outpath)
     # print(out)
     write.table(out, outpath, sep="\t", quote=FALSE, row.names=FALSE)
 }
