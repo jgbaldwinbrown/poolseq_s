@@ -24,9 +24,20 @@ update_info <- function(info, sync) {
 }
 
 estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
-    traj = af.traj(sync, chrom, pos, repl=info$repl)
+    # print("sync: ")
+    # print(sync)
+    # print("chrom: ")
+    # print(chrom)
+    # print("pos: ")
+    # print(pos)
+    # print("info$repl: ")
+    # print(info$repl)
+    # traj = af.traj(sync, chrom, pos, repl=info$repl) # TESTING
+    traj = af.traj(sync, chrom, pos, repl=info$repl_levels)
+    # print("traj: ")
     # print(traj)
     est_p <- estimateSH(traj, Ne=Ne, t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
+    # print("est_p: ")
     # print(est_p)
     return(est_p)
 }
@@ -35,6 +46,14 @@ estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
 estimateSH_individual_loci <- function(sync, Ne, info) {
     chrom_pos = cbind(info$chrom, info$pos)
     chrom_pos_list = split(chrom_pos, seq(nrow(chrom_pos)))
+    # print("chrom_pos_list: ")
+    # print(chrom_pos_list)
+    # print("sync: ")
+    # print(sync)
+    # print("Ne: ")
+    # print(Ne)
+    # print("info: ")
+    # print(info)
     s_vals = mclapply(chrom_pos_list, function(x) {estimateSH_one_locus(sync, Ne, info, x[1], x[2])})
     return(list(chrom_pos, s_vals))
 }
@@ -114,7 +133,7 @@ main = function() {
     info = get_info(infopath)
     mySync <- read.sync(file=syncpath, gen=info$gen, repl=info$repl)
     info = update_info(info, mySync)
-    myTraj = af.traj(mySync, info$chrom, info$pos, info$repl)
+    # myTraj = af.traj(mySync, info$chrom, info$pos, info$repl)
     
     outdir = paste(outpath, "_tempdir/", sep="")
     if (! dir.exists(outdir)) {
@@ -125,6 +144,8 @@ main = function() {
     for (repl in info$repl_levels) {
         myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
         myCov_repltemp = coverage(mySync, info$chrom, info$pos, repl=repl, gen=info$gen_levels)
+        # print(myTraj_repltemp)
+        # print(myCov_repltemp)
         traj_gen1_name = paste("F", as.character(info$gen_levels[1]), sep="")
         traj_gen2_name = paste("F", as.character(info$gen_levels[length(info$gen_levels)]), sep="")
         cov_gen1_name = paste("F", as.character(info$gen_levels[1]), ".R", as.character(repl), ".cov", sep="")
@@ -134,6 +155,12 @@ main = function() {
         if (file.exists(repl_ne_outpath_done)) {
             est_nes[repl] = scan(repl_ne_outpath)
         } else {
+            # print("est_nes inputs:")
+            # print(myTraj_repltemp[,traj_gen1_name])
+            # print(myTraj_repltemp[,traj_gen2_name])
+            # print(myCov_repltemp[,cov_gen1_name])
+            # print(myCov_repltemp[,cov_gen2_name])
+            # print(info$gen_levels[length(info$gen_levels)] - info$gen_levels[1])
             est_nes[repl] = estimateNe(
                 p0=myTraj_repltemp[,traj_gen1_name], 
                 pt=myTraj_repltemp[,traj_gen2_name], 
