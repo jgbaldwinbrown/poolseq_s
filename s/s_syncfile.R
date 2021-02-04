@@ -4,6 +4,8 @@ suppressMessages(library(poolSeq))
 suppressMessages(library(parallel))
 # options(error = recover)
 
+global_chunksize = 2
+
 get_info <- function(infopath) {
     info_unstructured = as.data.frame(fread(infopath, sep="\t", header=TRUE))
     # print(info_unstructured)
@@ -40,7 +42,11 @@ estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
     traj = af.traj(sync, chrom, pos, repl=info$repl_levels)
     # print("traj: ")
     # print(traj)
-    est_p <- estimateSH(traj, Ne=Ne, t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
+    # print("Ne: ")
+    # print("info$gen_levels: ")
+    est_p <- estimateSH(traj, Ne=round(Ne), t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
+    # print(est_p)
+    # print(str(est_p))
     # print("est_p: ")
     # print(est_p)
     return(est_p)
@@ -81,7 +87,7 @@ combine_est_sh_outputs <- function(full_output_list) {
 }
 
 estimateSH_individual_loci_savewrapper <- function(sync, Ne, info, outpath) {
-    iteration_series = seq(1,length(info$chrom),1000)
+    iteration_series = seq(1,length(info$chrom),global_chunksize)
     full_output_list = vector(mode = "list", length = length(iteration_series))
     j = 1
     for (i in iteration_series) {
@@ -89,8 +95,8 @@ estimateSH_individual_loci_savewrapper <- function(sync, Ne, info, outpath) {
         temppath_est_sh_done = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".RData.done", sep="")
         if (! file.exists(temppath_est_sh_done)) {
             mini_info = info
-            mini_info$chrom = info$chrom[i:min((i+1000), length(info$chrom))]
-            mini_info$pos = info$pos[i:min((i+1000), length(info$pos))]
+            mini_info$chrom = info$chrom[i:min((i+global_chunksize-1), length(info$chrom))]
+            mini_info$pos = info$pos[i:min((i+global_chunksize-1), length(info$pos))]
             temp = estimateSH_individual_loci(sync, Ne, mini_info)
             full_output_list[[j]] = temp
             saveRDS(temp, file = temppath_est_sh)
