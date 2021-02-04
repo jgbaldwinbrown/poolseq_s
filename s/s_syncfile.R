@@ -6,12 +6,16 @@ suppressMessages(library(parallel))
 
 get_info <- function(infopath) {
     info_unstructured = as.data.frame(fread(infopath, sep="\t", header=TRUE))
-    info = vector(mode = "list", length = 8)
-    names(info) = c("chrom", "pos", "gen", "repl", "gen_levels", "repl_levels", "chrom_levels", "pos_levels")
+    # print(info_unstructured)
+    info = vector(mode = "list", length = 10)
+    names(info) = c("chrom", "pos", "gen", "repl", "pool_size", "gen_levels", "repl_levels", "pool_size_levels", "chrom_levels", "pos_levels")
     info$gen = info_unstructured$gen
     info$repl = info_unstructured$repl
+    info$pool_size = info_unstructured$pool_size
     info$gen_levels = sort(as.numeric(levels(factor(info_unstructured$gen))))
     info$repl_levels = sort(as.numeric(levels(factor(info_unstructured$repl))))
+    info$pool_size_levels = sort(as.numeric(levels(factor(info_unstructured$pool_size))))
+    # print(info)
     return(info)
 }
 
@@ -54,14 +58,25 @@ estimateSH_individual_loci <- function(sync, Ne, info) {
     # print(Ne)
     # print("info: ")
     # print(info)
-    s_vals = mclapply(chrom_pos_list, function(x) {estimateSH_one_locus(sync, Ne, info, x[1], x[2])})
+    s_vals = unname(mclapply(chrom_pos_list, function(x) {estimateSH_one_locus(sync, Ne, info, x[1], x[2])}))
+    # print(s_vals)
     return(list(chrom_pos, s_vals))
 }
 
 combine_est_sh_outputs <- function(full_output_list) {
+    # print("full_output_list:")
+    # print(full_output_list)
     chrom_pos_list = mclapply(full_output_list, function(x) x[[1]])
-    s_vals_list = mclapply(full_output_list, function(x) x[[2]][[1]])
+    s_vals_list = unlist(mclapply(full_output_list, function(x) x[[2]]), recursive=FALSE)
     chrom_pos = do.call("rbind", chrom_pos_list)
+    # print(full_output_list)
+    # print(chrom_pos_list)
+    # print("s_vals_list:")
+    # print(s_vals_list)
+    # print("s_vals_list[[1]]:")
+    # print(s_vals_list[[1]])
+    # print(chrom_pos)
+    # print(list(chrom_pos, s_vals_list))
     return(list(chrom_pos, s_vals_list))
 }
 
@@ -76,14 +91,20 @@ estimateSH_individual_loci_savewrapper <- function(sync, Ne, info, outpath) {
             mini_info = info
             mini_info$chrom = info$chrom[i:min((i+1000), length(info$chrom))]
             mini_info$pos = info$pos[i:min((i+1000), length(info$pos))]
-            full_output_list[[j]] = estimateSH_individual_loci(sync, Ne, mini_info)
-            temp = full_output_list[[j]]
+            temp = estimateSH_individual_loci(sync, Ne, mini_info)
+            full_output_list[[j]] = temp
             saveRDS(temp, file = temppath_est_sh)
+            # print("temp:")
+            # print(str(temp))
+            # print("temp[[1]]:")
+            # print(str(temp[[1]]))
+            # print("temp[[2]]:")
+            # print(str(temp[[2]]))
             file.create(temppath_est_sh_done)
         } else {
             full_output_list[[j]] = readRDS(temppath_est_sh)
         }
-    j = j + 1;
+        j = j + 1;
     }
     # print(full_output_list)
     return(combine_est_sh_outputs(full_output_list))
@@ -118,6 +139,8 @@ est_full_save <- function(sync, Ne, info, outpath) {
     est_all_p = est_list[[2]]
     s_vals = gets_from_ests(est_all_p)
     p_vals = getp_from_ests(est_all_p)
+    # print(s_vals)
+    # print(p_vals)
     out = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
     # print(out)
     colnames(out) = c("chrom", "pos", "s", "p.value")
@@ -146,10 +169,18 @@ main = function() {
         myCov_repltemp = coverage(mySync, info$chrom, info$pos, repl=repl, gen=info$gen_levels)
         # print(myTraj_repltemp)
         # print(myCov_repltemp)
-        traj_gen1_name = paste("F", as.character(info$gen_levels[1]), sep="")
-        traj_gen2_name = paste("F", as.character(info$gen_levels[length(info$gen_levels)]), sep="")
-        cov_gen1_name = paste("F", as.character(info$gen_levels[1]), ".R", as.character(repl), ".cov", sep="")
-        cov_gen2_name = paste("F", as.character(info$gen_levels[length(info$gen_levels)]), ".R", as.character(repl), ".cov", sep="")
+        gen1 = info$gen_levels[1]
+        gen2 = info$gen_levels[length(info$gen_levels)]
+        # print(info$gen == gen1)
+        # print(info$gen == gen2)
+        # print(info$repl == repl)
+        # print(info$pool_size)
+        pool1 = info$pool_size[info$gen == gen1 & info$repl == repl]
+        pool2 = info$pool_size[info$gen == gen2 & info$repl == repl]
+        traj_gen1_name = paste("F", as.character(gen1), sep="")
+        traj_gen2_name = paste("F", as.character(gen2), sep="")
+        cov_gen1_name = paste("F", as.character(gen1), ".R", as.character(repl), ".cov", sep="")
+        cov_gen2_name = paste("F", as.character(gen2), ".R", as.character(repl), ".cov", sep="")
         repl_ne_outpath = paste(outdir, outpath, "_", cov_gen1_name, "_ne.txt", sep="")
         repl_ne_outpath_done = paste(outdir, outpath, "_", cov_gen1_name, "_ne.txt.done", sep="")
         if (file.exists(repl_ne_outpath_done)) {
@@ -161,12 +192,16 @@ main = function() {
             # print(myCov_repltemp[,cov_gen1_name])
             # print(myCov_repltemp[,cov_gen2_name])
             # print(info$gen_levels[length(info$gen_levels)] - info$gen_levels[1])
+            # print(pool1)
+            # print(pool2)
             est_nes[repl] = estimateNe(
                 p0=myTraj_repltemp[,traj_gen1_name], 
                 pt=myTraj_repltemp[,traj_gen2_name], 
                 cov0=myCov_repltemp[,cov_gen1_name], 
                 covt=myCov_repltemp[,cov_gen2_name], 
-                t=info$gen_levels[length(info$gen_levels)] - info$gen_levels[1]
+                t=info$gen_levels[length(info$gen_levels)] - info$gen_levels[1],
+                method=c("P.planII"),
+                poolSize=c(pool1, pool2)
             )
             write(est_nes[repl], repl_ne_outpath, sep = "\t")
             write(est_nes[repl], repl_ne_outpath_done, sep = "\t")
