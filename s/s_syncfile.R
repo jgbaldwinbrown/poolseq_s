@@ -4,7 +4,7 @@ suppressMessages(library(poolSeq))
 suppressMessages(library(parallel))
 # options(error = recover)
 
-global_chunksize = 2
+global_chunksize = 1000
 
 get_info <- function(infopath) {
     info_unstructured = as.data.frame(fread(infopath, sep="\t", header=TRUE))
