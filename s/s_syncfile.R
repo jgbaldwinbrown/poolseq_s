@@ -37,8 +37,8 @@ estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
     # print("pos: ")
     # print(pos)
     # print("info$repl: ")
-    print("one locus info$repl_levels")
-    print(info$repl_levels)
+    # print("one locus info$repl_levels")
+    # print(info$repl_levels)
     # traj = af.traj(sync, chrom, pos, repl=info$repl) # TESTING
     traj = af.traj(sync, chrom, pos, repl=info$repl_levels)
     # print("traj: ")
@@ -107,8 +107,8 @@ estimateSH_individual_loci_savewrapper <- function(sync, Ne, info, outpath) {
             mini_info = info
             mini_info$chrom = info$chrom[i:min((i+global_chunksize-1), length(info$chrom))]
             mini_info$pos = info$pos[i:min((i+global_chunksize-1), length(info$pos))]
-            print("indiv loci savewrapper mini_info:")
-            print(mini_info)
+            # print("indiv loci savewrapper mini_info:")
+            # print(mini_info)
             temp = estimateSH_individual_loci(sync, Ne, mini_info)
             full_output_list[[j]] = temp
             saveRDS(temp, file = temppath_est_sh)
@@ -171,8 +171,8 @@ est_full_save_repls <- function(sync, Ne, info, outpath) {
         temp_info = info
         temp_info$repl_levels = info$repl_levels[i]
         # print(info)
-        print("full info:")
-        print(temp_info)
+        # print("full info:")
+        # print(temp_info)
         outdir = paste(outpath, "_repl", as.character(temp_info$repl_levels), "_tempdir/", sep="")
         if (! dir.exists(outdir)) {
             dir.create(outdir)
@@ -269,9 +269,12 @@ main = function() {
     out = est_full_save(mySync, mean_ne, info, outpath)
     out_repls = est_full_save_repls(mySync, mean_ne, info, outpath)
     # print(out)
-    print(out)
-    print(out_repls)
+    # print(out)
+    # print(out_repls)
     write.table(out, outpath, sep="\t", quote=FALSE, row.names=FALSE)
+    for (i in 1:length(out_repls)) {
+        write.table(out_repls[[i]], paste(outpath, "_repl", info$repl_levels[i], sep=""), sep="\t", quote=FALSE, row.names=FALSE)
+    }
 }
 
 main()
