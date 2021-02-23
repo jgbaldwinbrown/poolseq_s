@@ -35,7 +35,6 @@ def write_tukey_pair(pair, pair_data, out_prefix):
 def write_tukeys(chrpos, tukey_results, out_prefix):
     unique_group_pairs = zip(list(tukey_results[0]["group1"]), list(tukey_results[0]["group2"]))
     for pair in unique_group_pairs:
-        print(pair)
         pair_data = pd.concat([x[(x["group1"] == pair[0]) & (x["group2"] == pair[1])] for x in tukey_results])
         pair_data["chrpos"] = chrpos
         write_tukey_pair(pair, pair_data, out_prefix)
