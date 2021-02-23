@@ -37,7 +37,8 @@ estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
     # print("pos: ")
     # print(pos)
     # print("info$repl: ")
-    # print(info$repl)
+    # print("one locus info$repl_levels")
+    # print(info$repl_levels)
     # traj = af.traj(sync, chrom, pos, repl=info$repl) # TESTING
     traj = af.traj(sync, chrom, pos, repl=info$repl_levels)
     # print("traj: ")
@@ -51,6 +52,15 @@ estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
     # print(est_p)
     return(est_p)
 }
+# 
+# estimate_repl_SH_one_locus = function(sync, Ne, info, chrom, pos, repl_Nes) {
+#     trajs = mclapply(info$repl_levels, function(x) {af.traj(sync, chrom, pos, repl=x)})
+#     print(trajs)
+#     # traj = af.traj(sync, chrom, pos, repl=info$repl_levels)
+#     est_ps <- mclapply(trajs, function(x) {estimateSH(x, Ne=round(Ne), t=info$gen_levels, h=0.5, simulate.p.value=TRUE)})
+#     # est_p <- estimateSH(traj, Ne=round(Ne), t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
+#     return(est_p)
+# }
 
 #        myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
 estimateSH_individual_loci <- function(sync, Ne, info) {
@@ -97,6 +107,8 @@ estimateSH_individual_loci_savewrapper <- function(sync, Ne, info, outpath) {
             mini_info = info
             mini_info$chrom = info$chrom[i:min((i+global_chunksize-1), length(info$chrom))]
             mini_info$pos = info$pos[i:min((i+global_chunksize-1), length(info$pos))]
+            # print("indiv loci savewrapper mini_info:")
+            # print(mini_info)
             temp = estimateSH_individual_loci(sync, Ne, mini_info)
             full_output_list[[j]] = temp
             saveRDS(temp, file = temppath_est_sh)
@@ -150,6 +162,33 @@ est_full_save <- function(sync, Ne, info, outpath) {
     out = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
     # print(out)
     colnames(out) = c("chrom", "pos", "s", "p.value")
+    return(out)
+}
+
+est_full_save_repls <- function(sync, Ne, info, outpath) {
+    out = vector(mode="list", length = length(info$repl_levels))
+    for (i in 1:length(out)) {
+        temp_info = info
+        temp_info$repl_levels = info$repl_levels[i]
+        # print(info)
+        # print("full info:")
+        # print(temp_info)
+        outdir = paste(outpath, "_repl", as.character(temp_info$repl_levels), "_tempdir/", sep="")
+        if (! dir.exists(outdir)) {
+            dir.create(outdir)
+        }
+        est_list <- estimateSH_individual_loci_savewrapper(sync, Ne, temp_info, paste(outpath,"_repl",as.character(temp_info$repl_levels), sep=""))
+        # print(est_list)
+        chrom_pos = est_list[[1]]
+        est_all_p = est_list[[2]]
+        s_vals = gets_from_ests(est_all_p)
+        p_vals = getp_from_ests(est_all_p)
+        # print(s_vals)
+        # print(p_vals)
+        out[[i]] = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
+        # print(out)
+        colnames(out[[i]]) = c("chrom", "pos", "s", "p.value")
+    }
     return(out)
 }
 
@@ -228,8 +267,14 @@ main = function() {
     
     # out = est_full(mySync, mean_ne, info)
     out = est_full_save(mySync, mean_ne, info, outpath)
+    out_repls = est_full_save_repls(mySync, mean_ne, info, outpath)
     # print(out)
+    # print(out)
+    # print(out_repls)
     write.table(out, outpath, sep="\t", quote=FALSE, row.names=FALSE)
+    for (i in 1:length(out_repls)) {
+        write.table(out_repls[[i]], paste(outpath, "_repl", info$repl_levels[i], sep=""), sep="\t", quote=FALSE, row.names=FALSE)
+    }
 }
 
 main()
