@@ -20,10 +20,16 @@ def do_tukey(data):
 def do_tukeys(data):
     unique_chrpositions = list(data["chrpos"].unique())
     out = []
+    used_chrpositions = []
     for chrpos in unique_chrpositions:
         chrpos_data = data[data["chrpos"] == chrpos]
-        out.append(do_tukey(chrpos_data))
-    return(unique_chrpositions, out)
+        try:
+            tukey = do_tukey(chrpos_data)
+            out.append(tukey)
+            used_chrpositions.append(chrpos)
+        except:
+            pass
+    return(unique_chrpositions, out, used_chrpositions)
 
 def write_tukey(tukey_results, outconn):
     outconn.write(str(tukey_results) + "\n")
@@ -34,16 +40,21 @@ def write_tukey_pair(pair, pair_data, out_prefix):
 
 def write_tukeys(chrpos, tukey_results, out_prefix):
     unique_group_pairs = zip(list(tukey_results[0]["group1"]), list(tukey_results[0]["group2"]))
+    for a_chrpos, tukey_result in zip(chrpos, tukey_results):
+        tukey_result["chrpos"] = a_chrpos
     for pair in unique_group_pairs:
         pair_data = pd.concat([x[(x["group1"] == pair[0]) & (x["group2"] == pair[1])] for x in tukey_results])
-        pair_data["chrpos"] = chrpos
+        # print(pair)
+        # print(pair_data)
+        # print(chrpos)
+        # pair_data["chrpos"] = chrpos
         write_tukey_pair(pair, pair_data, out_prefix)
 
 def main():
     data = get_data(sys.stdin)
     out_prefix = sys.argv[1]
-    chrpos, tukey_results = do_tukeys(data)
-    write_tukeys(chrpos, tukey_results, out_prefix)
+    chrpos, tukey_results, used_chrpos = do_tukeys(data)
+    write_tukeys(used_chrpos, tukey_results, out_prefix)
 
 if __name__ == "__main__":
     main()
