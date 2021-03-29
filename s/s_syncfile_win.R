@@ -116,6 +116,7 @@ estimateSH_wins <- function(sync, Ne, info, chrompos, start_chrompos_chunk, wins
 estimateSH_win_savewrapper <- function(sync, Ne, info, outpath, winsize, winstep) {
     chrompos = data.frame(chrom = info$chrom, pos = as.numeric(info$pos), index = as.numeric(1:length(info$chrom)))
     chrompos = chrompos[order(chrompos[,"chrom"], chrompos["pos"]),]
+    write.table(chrompos, "chrompos_temp.txt", sep="\t")
     all_starts = chrompos[seq(1,nrow(chrompos), winstep),]
     all_starts_chunked = split(all_starts, (as.numeric(rownames(all_starts))-1) %/% global_chunksize)
     full_output_list = vector(mode = "list", length = length(all_starts_chunked))
@@ -191,7 +192,7 @@ est_full_save_win <- function(sync, Ne, info, outpath, winsize, winstep) {
     p_vals = getp_from_ests(est_all_p)
     # print(s_vals)
     # print(p_vals)
-    out = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
+    out = as.data.frame(cbind(chrom_pos[,c("chrom", "pos")], s_vals, p_vals))
     # print(out)
     colnames(out) = c("chrom", "pos", "s", "p.value")
     return(out)
@@ -217,7 +218,7 @@ est_full_save_repls <- function(sync, Ne, info, outpath) {
         p_vals = getp_from_ests(est_all_p)
         # print(s_vals)
         # print(p_vals)
-        out[[i]] = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
+        out[[i]] = as.data.frame(cbind(chrom_pos[,c("chrom", "pos")], s_vals, p_vals))
         # print(out)
         colnames(out[[i]]) = c("chrom", "pos", "s", "p.value")
     }
