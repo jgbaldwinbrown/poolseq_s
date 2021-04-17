@@ -38,17 +38,17 @@ estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
 }
 estimateSH_one_win = function(sync, Ne, info, chrompos, one_start, winsize) {
     # check this
-    print("chrompos:")
-    print(chrompos)
-    print("one_start:")
-    print(one_start)
+    # print("chrompos:")
+    # print(chrompos)
+    # print("one_start:")
+    # print(one_start)
     span = one_start$index[1]:min(one_start$index[1] + winsize - 1, max(chrompos$index))
     chrom = chrompos$chrom[span]
     pos = chrompos$pos[span]
-    print("chrom:")
-    print(chrom)
-    print("pos:")
-    print(pos)
+    # print("chrom:")
+    # print(chrom)
+    # print("pos:")
+    # print(pos)
     traj = af.traj(sync, chrom, pos, repl=info$repl_levels)
     est_p <- estimateSH(traj, Ne=round(Ne), t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
     return(est_p)
@@ -92,12 +92,12 @@ estimateSH_individual_loci_savewrapper <- function(sync, Ne, info, outpath) {
 }
 
 estimateSH_wins <- function(sync, Ne, info, chrompos, start_chrompos_chunk, winsize) {
-    print("start_chrompos_chunk:")
-    print(start_chrompos_chunk)
+    # print("nrow(start_chrompos_chunk):")
+    # print(nrow(start_chrompos_chunk))
     start_chrompos_chunk_list = split(start_chrompos_chunk, 1:nrow(start_chrompos_chunk))
     s_vals = unname(mclapply(start_chrompos_chunk_list, function(x) {estimateSH_one_win(sync, Ne, info, chrompos, x, winsize)}))
-    print("s_vals:")
-    print(s_vals)
+    # print("length(s_vals):")
+    # print(length(s_vals))
     return(list(start_chrompos_chunk, s_vals))
 }
 
@@ -118,7 +118,12 @@ estimateSH_win_savewrapper <- function(sync, Ne, info, outpath, winsize, winstep
     chrompos = chrompos[order(chrompos[,"chrom"], chrompos["pos"]),]
     write.table(chrompos, "chrompos_temp.txt", sep="\t")
     all_starts = chrompos[seq(1,nrow(chrompos), winstep),]
-    all_starts_chunked = split(all_starts, (as.numeric(rownames(all_starts))-1) %/% global_chunksize)
+    # print("all_starts:")
+    # print(all_starts)
+    #all_starts_chunked = split(all_starts, (as.numeric(rownames(all_starts))-1) %/% global_chunksize)
+    all_starts_chunked = split(all_starts, (0:(nrow(all_starts)-1)) %/% global_chunksize)
+    # print("all_starts_chunked:")
+    # print(all_starts_chunked)
     full_output_list = vector(mode = "list", length = length(all_starts_chunked))
     j = 1
     for (i in 1:length(all_starts_chunked)) {
@@ -126,8 +131,8 @@ estimateSH_win_savewrapper <- function(sync, Ne, info, outpath, winsize, winstep
         temppath_est_sh_done = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".RData.done", sep="")
         if (! file.exists(temppath_est_sh_done)) {
             start_chunk = all_starts_chunked[[i]]
-            print("start_chunk:")
-            print(start_chunk)
+            # print("start_chunk:")
+            # print(start_chunk)
             temp = estimateSH_wins(sync, Ne, info, chrompos, start_chunk, winsize)
             full_output_list[[j]] = temp
             saveRDS(temp, file = temppath_est_sh)
@@ -137,12 +142,17 @@ estimateSH_win_savewrapper <- function(sync, Ne, info, outpath, winsize, winstep
         }
         j = j + 1;
     }
-    return(combine_est_sh_outputs(full_output_list))
+    out = combine_est_sh_outputs(full_output_list)
+    # print("estimateSH_win_savewrapper length(out):")
+    # print(length(out))
+    # print("estimateSH_win_savewrapper nrow(out):")
+    # print(nrow(out))
+    return(out)
 }
 
 gets_from_ests <- function(ests) {
-    print("ests:")
-    print(ests)
+    # print("ests:")
+    # print(ests)
     s_vals = mclapply(ests, function(x) {x$s})
     return(unlist(s_vals))
 }
@@ -181,11 +191,10 @@ est_full_save <- function(sync, Ne, info, outpath) {
 
 est_full_save_win <- function(sync, Ne, info, outpath, winsize, winstep) {
     est_list <- estimateSH_win_savewrapper(sync, Ne, info, outpath, winsize, winstep)
-    print("est_list:")
-    print(est_list)
-    print("str(est_list):")
-    print(str(est_list))
+    # print("est_list:")
     # print(est_list)
+    # print("str(est_list):")
+    # print(str(est_list))
     chrom_pos = est_list[[1]]
     est_all_p = est_list[[2]]
     s_vals = gets_from_ests(est_all_p)
@@ -195,6 +204,8 @@ est_full_save_win <- function(sync, Ne, info, outpath, winsize, winstep) {
     out = as.data.frame(cbind(chrom_pos[,c("chrom", "pos")], s_vals, p_vals))
     # print(out)
     colnames(out) = c("chrom", "pos", "s", "p.value")
+    # print("nrow(out)")
+    # print(nrow(out))
     return(out)
 }
 
