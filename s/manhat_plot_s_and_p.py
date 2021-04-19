@@ -55,7 +55,7 @@ def main():
     # except:
     #     pass
     # print(gdata)
-    genedata, chrom_offsets = mh.manhatify(gdata, chrlens, chrom_col = "Scaffold", bp_col = "Position", val_col = "s", offset = -12630000)
+    genedata, chrom_offsets = mh.manhatify(gdata, chrlens, chrom_col = "Scaffold", bp_col = "Position", val_col = "s", offset = 10000)
     # print(genedata)
     # print(chrom_offsets)
     try:
