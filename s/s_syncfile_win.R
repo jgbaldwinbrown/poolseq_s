@@ -209,6 +209,37 @@ est_full_save_win <- function(sync, Ne, info, outpath, winsize, winstep) {
     return(out)
 }
 
+est_full_save_repls_win <- function(sync, Ne, info, outpath, winsize, winstep) {
+    out = vector(mode="list", length = length(info$repl_levels))
+    for (i in 1:length(out)) {
+        temp_info = info
+        temp_info$repl_levels = info$repl_levels[i]
+        outdir = paste(outpath, "_repl", as.character(temp_info$repl_levels), "_tempdir/", sep="")
+        if (! dir.exists(outdir)) {
+            dir.create(outdir)
+        }
+
+        repl_outpath = paste(outpath, "_repl", as.character(temp_info$repl_levels), sep="")
+        est_list <- estimateSH_win_savewrapper(sync, Ne, temp_info, repl_outpath, winsize, winstep)
+        # print("est_list:")
+        # print(est_list)
+        # print("str(est_list):")
+        # print(str(est_list))
+        chrom_pos = est_list[[1]]
+        est_all_p = est_list[[2]]
+        s_vals = gets_from_ests(est_all_p)
+        p_vals = getp_from_ests(est_all_p)
+        # print(s_vals)
+        # print(p_vals)
+        out[[i]] = as.data.frame(cbind(chrom_pos[,c("chrom", "pos")], s_vals, p_vals))
+        # print(out)
+        colnames(out[[i]]) = c("chrom", "pos", "s", "p.value")
+        # print("nrow(out)")
+        # print(nrow(out))
+    }
+    return(out)
+}
+
 est_full_save_repls <- function(sync, Ne, info, outpath) {
     out = vector(mode="list", length = length(info$repl_levels))
     for (i in 1:length(out)) {
@@ -297,11 +328,11 @@ main = function() {
     write(mean_ne, mean_ne_outpath_done, sep = "\t")
     
     out = est_full_save_win(mySync, mean_ne, info, outpath, winsize, winstep)
-    # out_repls = est_full_save_repls_win(mySync, mean_ne, info, outpath, winsize, winstep)
+    out_repls = est_full_save_repls_win(mySync, mean_ne, info, outpath, winsize, winstep)
     write.table(out, outpath, sep="\t", quote=FALSE, row.names=FALSE)
-    # for (i in 1:length(out_repls)) {
-    #     write.table(out_repls[[i]], paste(outpath, "_repl", info$repl_levels[i], sep=""), sep="\t", quote=FALSE, row.names=FALSE)
-    # }
+    for (i in 1:length(out_repls)) {
+        write.table(out_repls[[i]], paste(outpath, "_repl", info$repl_levels[i], sep=""), sep="\t", quote=FALSE, row.names=FALSE)
+    }
 }
 
 main()
