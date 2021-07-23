@@ -40,11 +40,6 @@ update_info <- List() ? function(info= ? List(), sync) {
     return(info)
 }
 
-estimateSH_one_locus = function(sync, Ne= ? Double(), info= ? List(), chrom= ? Character(), pos= ? Integer()) {
-    traj = af.traj(sync, chrom, pos, repl=info$repl_levels)
-    est_p <- estimateSH(traj, Ne=round(Ne), t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
-    return(est_p)
-}
 estimateSH_one_win = function(sync, Ne= ? Double(), info= ? List(), chrompos= ? Data.frame(), one_start= ? Data.frame(), winsize= ? Integer()) {
     # check this
     # print("chrompos:")
@@ -63,14 +58,6 @@ estimateSH_one_win = function(sync, Ne= ? Double(), info= ? List(), chrompos= ? 
     return(est_p)
 }
 
-estimateSH_individual_loci <- List(2) ? function(sync, Ne= ? Double(), info= ? List()) {
-    Data.frame() ? chrom_pos
-    chrom_pos = cbind(info$chrom, info$pos)
-    List() ? chrom_pos_list = split(chrom_pos, seq(nrow(chrom_pos)))
-    List() ? s_vals = unname(mclapply(chrom_pos_list, function(x) {estimateSH_one_locus(sync, Ne, info, x[1], x[2])}))
-    return(list(chrom_pos, s_vals))
-}
-
 combine_est_sh_outputs <- List(2) ? function(full_output_list= ? List()) {
     List() ? chrom_pos_list
     List() ? s_vals_list
@@ -79,30 +66,6 @@ combine_est_sh_outputs <- List(2) ? function(full_output_list= ? List()) {
     s_vals_list = unlist(mclapply(full_output_list, function(x) x[[2]]), recursive=FALSE)
     chrom_pos = do.call("rbind", chrom_pos_list)
     return(list(chrom_pos, s_vals_list))
-}
-
-estimateSH_individual_loci_savewrapper <- List(2) ? function(sync, Ne= ? Double(), info= ? List(), outpath= ? Character(1)) {
-    Integer() ? iteration_series = seq(1,length(info$chrom),global_chunksize)
-    List() ? full_output_list = vector(mode = "list", length = length(iteration_series))
-    Integer() ? j = 1
-    for (i in iteration_series) {
-        Character(1) ? temppath_est_sh = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".RData", sep="")
-        Character(1) ? temppath_est_sh_done = paste(outpath, "_tempdir/", outpath, "_est_sh_", as.character(i), ".RData.done", sep="")
-        if (! file.exists(temppath_est_sh_done)) {
-            List() ? mini_info
-            mini_info = info
-            mini_info$chrom = info$chrom[i:min((i+global_chunksize-1), length(info$chrom))]
-            mini_info$pos = info$pos[i:min((i+global_chunksize-1), length(info$pos))]
-            temp = estimateSH_individual_loci(sync, Ne, mini_info)
-            full_output_list[[j]] = temp
-            saveRDS(temp, file = temppath_est_sh)
-            file.create(temppath_est_sh_done)
-        } else {
-            full_output_list[[j]] = readRDS(temppath_est_sh)
-        }
-        j = j + 1;
-    }
-    return(combine_est_sh_outputs(full_output_list))
 }
 
 estimateSH_wins <- List(2) ? function(sync, Ne= ? Double(), info= ? List(), chrompos= ? Data.frame(), start_chrompos_chunk= ? Data.fram(), winsize= ? Integer()) {
@@ -114,18 +77,6 @@ estimateSH_wins <- List(2) ? function(sync, Ne= ? Double(), info= ? List(), chro
     # print(length(s_vals))
     return(list(start_chrompos_chunk, s_vals))
 }
-
-# estimateSH_win_chunks <- function(sync, Ne, info, chrompos, all_start_chrompos, winsize) {
-#     start_chrompos_list = split(all_start_chrompos, seq(nrow(all_start_chrompos)))
-#     s_vals_chunks = vector(mode = "list", length = length(start_chrompos_list))
-#     print("start_chrompos_list:")
-#     print(start_chrompos_list)
-#     for (i in 1:length(start_chrompos_list)) {
-#         s_vals_chunks[i] = estimateSH_wins(sync, Ne, info, chrompos, start_chrompos_list[[i]], winsize)
-#     }
-#     s_vals = unname(unlist(s_vals_chunks))
-#     return(list(all_start_chrompos, s_vals))
-# }
 
 estimateSH_win_savewrapper <- List(2) ? function(sync, Ne= ? Double(), info= ? List(), outpath= ? Character(1), winsize= ? Integer(1), winstep= ? Integer(1)) {
     Data.frame() ? chrompos
@@ -186,39 +137,6 @@ getp_from_ests <- Double() ? function(ests= ? List()) {
     return(unlist(p_vals))
 }
 
-est_full <- Data.frame() ? function(sync, Ne= ? Double(), info= ? List()) {
-    List(2) ? est_list
-    Data.frame() ? chrom_pos
-    List() ? est_all_p
-    Double() ? s_vals
-    Double() ? p_vals
-    Data.frame() ? out
-    est_list <- estimateSH_individual_loci(sync, Ne, info)
-    # print(est_list)
-    chrom_pos = est_list[[1]]
-    est_all_p = est_list[[2]]
-    s_vals = gets_from_ests(est_all_p)
-    p_vals = getp_from_ests(est_all_p)
-    out = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
-    colnames(out) = c("chrom", "pos", "s", "p.value")
-    return(out)
-}
-
-est_full_save <- Data.frame() ? function(sync, Ne= ? Double(), info= ? List(), outpath= ? Character(1)) {
-    est_list <- estimateSH_individual_loci_savewrapper(sync, Ne, info, outpath)
-    # print(est_list)
-    chrom_pos = est_list[[1]]
-    est_all_p = est_list[[2]]
-    s_vals = gets_from_ests(est_all_p)
-    p_vals = getp_from_ests(est_all_p)
-    # print(s_vals)
-    # print(p_vals)
-    out = as.data.frame(cbind(chrom_pos, s_vals, p_vals))
-    # print(out)
-    colnames(out) = c("chrom", "pos", "s", "p.value")
-    return(out)
-}
-
 est_full_save_win <- function(sync, Ne, info, outpath, winsize, winstep) {
     est_list <- estimateSH_win_savewrapper(sync, Ne, info, outpath, winsize, winstep)
     # print("est_list:")
@@ -266,33 +184,6 @@ est_full_save_repls_win <- function(sync, Ne, info, outpath, winsize, winstep) {
         colnames(out[[i]]) = c("chrom", "pos", "s", "p.value")
         # print("nrow(out)")
         # print(nrow(out))
-    }
-    return(out)
-}
-
-est_full_save_repls <- function(sync, Ne, info, outpath) {
-    out = vector(mode="list", length = length(info$repl_levels))
-    for (i in 1:length(out)) {
-        temp_info = info
-        temp_info$repl_levels = info$repl_levels[i]
-        # print(info)
-        # print("full info:")
-        # print(temp_info)
-        outdir = paste(outpath, "_repl", as.character(temp_info$repl_levels), "_tempdir/", sep="")
-        if (! dir.exists(outdir)) {
-            dir.create(outdir)
-        }
-        est_list <- estimateSH_individual_loci_savewrapper(sync, Ne, temp_info, paste(outpath,"_repl",as.character(temp_info$repl_levels), sep=""))
-        # print(est_list)
-        chrom_pos = est_list[[1]]
-        est_all_p = est_list[[2]]
-        s_vals = gets_from_ests(est_all_p)
-        p_vals = getp_from_ests(est_all_p)
-        # print(s_vals)
-        # print(p_vals)
-        out[[i]] = as.data.frame(cbind(chrom_pos[,c("chrom", "pos")], s_vals, p_vals))
-        # print(out)
-        colnames(out[[i]]) = c("chrom", "pos", "s", "p.value")
     }
     return(out)
 }
