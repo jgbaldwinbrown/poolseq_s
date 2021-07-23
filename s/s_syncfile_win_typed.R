@@ -4,20 +4,20 @@
 #   backports::import(pkgname, c("deparse1"))
 # }
 # library("r-lib/backports")
-library(utils)
-library(backports)
+suppressMessages(library(utils))
+suppressMessages(library(backports))
 deparse1 = getFromNamespace("deparse1", "backports")
 
 suppressMessages(library(poolSeq))
 suppressMessages(library(parallel))
-library(typed)
+suppressMessages(library(typed))
 # options(error = recover)
 options(error = quote({dump.frames(to.file=TRUE); q()}))
 
 
 global_chunksize = 1000
 
-get_info <- function(infopath) {
+get_info <- List() ? function(infopath= ? Character()) {
     Data.frame() ? info_unstructured <- as.data.frame(fread(infopath, sep="\t", header=TRUE))
     # print(info_unstructured)
     List() ? info <- vector(mode = "list", length = 10)
@@ -32,7 +32,7 @@ get_info <- function(infopath) {
     return(info)
 }
 
-update_info <- function(info, sync) {
+update_info <- List() ? function(info= ? List(), sync) {
     info$chrom = sync@alleles$chr
     info$pos = sync@alleles$pos
     info$chrom_levels = sort(levels(factor(info$chrom)))
@@ -40,20 +40,20 @@ update_info <- function(info, sync) {
     return(info)
 }
 
-estimateSH_one_locus = function(sync, Ne, info, chrom, pos) {
+estimateSH_one_locus = function(sync, Ne= ? Double(), info= ? List(), chrom= ? Character(), pos= ? Integer()) {
     traj = af.traj(sync, chrom, pos, repl=info$repl_levels)
     est_p <- estimateSH(traj, Ne=round(Ne), t=info$gen_levels, h=0.5, simulate.p.value=TRUE)
     return(est_p)
 }
-estimateSH_one_win = function(sync, Ne, info, chrompos, one_start, winsize) {
+estimateSH_one_win = function(sync, Ne= ? Double(), info= ? List(), chrompos= ? Data.frame(), one_start= ? Data.frame(), winsize= ? Integer()) {
     # check this
     # print("chrompos:")
     # print(chrompos)
     # print("one_start:")
     # print(one_start)
-    span = one_start$index[1]:min(one_start$index[1] + winsize - 1, max(chrompos$index))
-    chrom = chrompos$chrom[span]
-    pos = chrompos$pos[span]
+    Integer() ? span = one_start$index[1]:min(one_start$index[1] + winsize - 1, max(chrompos$index))
+    Character() ? chrom = chrompos$chrom[span]
+    Integer() ? pos = chrompos$pos[span]
     # print("chrom:")
     # print(chrom)
     # print("pos:")
@@ -63,8 +63,8 @@ estimateSH_one_win = function(sync, Ne, info, chrompos, one_start, winsize) {
     return(est_p)
 }
 
-estimateSH_individual_loci <- function(sync, Ne, info) {
-    chrom_pos = cbind(info$chrom, info$pos)
+estimateSH_individual_loci <- function(sync, Ne= ? Double(), info= ? List()) {
+    Data.frame() ? chrom_pos = cbind(info$chrom, info$pos)
     chrom_pos_list = split(chrom_pos, seq(nrow(chrom_pos)))
     s_vals = unname(mclapply(chrom_pos_list, function(x) {estimateSH_one_locus(sync, Ne, info, x[1], x[2])}))
     return(list(chrom_pos, s_vals))
