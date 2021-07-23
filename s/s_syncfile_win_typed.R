@@ -137,8 +137,14 @@ getp_from_ests <- Double() ? function(ests= ? List()) {
     return(unlist(p_vals))
 }
 
-est_full_save_win <- function(sync, Ne, info, outpath, winsize, winstep) {
+est_full_save_win <- Data.frame() ? function(sync, Ne= ? Double(), info= ? List(), outpath= ? Character(1), winsize= ? Integer(1), winstep= ? Integer(1)) {
+    List(2) ? est_list
     est_list <- estimateSH_win_savewrapper(sync, Ne, info, outpath, winsize, winstep)
+    List() ? chrom_pos
+    List() ? est_all_p
+    Double() ? s_vals
+    Double() ? p_vals
+    Data.frame() ? out
     # print("est_list:")
     # print(est_list)
     # print("str(est_list):")
@@ -157,7 +163,16 @@ est_full_save_win <- function(sync, Ne, info, outpath, winsize, winstep) {
     return(out)
 }
 
-est_full_save_repls_win <- function(sync, Ne, info, outpath, winsize, winstep) {
+est_full_save_repls_win <- List() ? function(sync, Ne= ? Double(), info= ? List(), outpath= ? Character(1), winsize= ? Integer(1), winstep= ? Integer(1)) {
+    List() ? out
+    List() ? temp_info
+    Character(1) ? outdir
+    Character(1) ? repl_outpath
+    List(2) ? est_list
+    List() ? chrom_pos
+    List() ? est_all_p
+    Double() ? s_vals
+    Double() ? p_vals
     out = vector(mode="list", length = length(info$repl_levels))
     for (i in 1:length(out)) {
         temp_info = info
@@ -190,6 +205,35 @@ est_full_save_repls_win <- function(sync, Ne, info, outpath, winsize, winstep) {
 
 main = function() {
     
+    Character() ? args
+    Character(1) ? syncpath
+    Character(1) ? infopath
+    Character(1) ? outpath
+    Integer(1) ? winsize
+    Integer(1) ? sinstep
+    List() ? info
+    Character(1) ? outdir
+    Double() ? est_nes
+    Double() ? myTraj_repltemp
+    Double () ? myCov_repltemp
+    Double(1) ? gen1
+    Double(1) ? gen2
+    Integer(1) ? pool1
+    Integer(1) ? pool2
+    Character(1) ? traj_gen1_name
+    Character(1) ? traj_gen2_name
+    Character(1) ? cov_gen1_name
+    Character(1) ? cov_gen2_name
+    Character(1) ? repl_ne_outpath
+    Character(1) ? repl_ne_outpath_done
+    Character(1) ? ne_outpath
+    Character(1) ? ne_outpath_done
+    Double(1) ? mean_ne
+    Character(1) ? mean_ne_outpath
+    Character(1) ? mean_ne_outpath_done
+    Data.frame() ? out
+    List() ? out_repls
+
     args = commandArgs(trailingOnly = TRUE)
     syncpath = args[1]
     infopath = args[2]
@@ -205,7 +249,7 @@ main = function() {
         dir.create(outdir)
     }
     
-    est_nes = rep(NA, length(info$repl_levels))
+    est_nes = as.numeric(rep(NA, length(info$repl_levels)))
     for (repl in info$repl_levels) {
         myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
         myCov_repltemp = coverage(mySync, info$chrom, info$pos, repl=repl, gen=info$gen_levels)
