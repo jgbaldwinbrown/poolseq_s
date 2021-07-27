@@ -84,7 +84,7 @@ def main() -> None:
     # print(gdata)
     genedata: pd.DataFrame
     chrom_offsets: pd.DataFrame
-    genedata, chrom_offsets = mh.manhatify(gdata, chrlens, chrom_col = "Scaffold", bp_col = "Position", val_col = "s", offset = 10000)
+    genedata, chrom_offsets, extra_data = mh.manhatify(gdata, chrlens, chrom_col = "Scaffold", bp_col = "Position", val_col = "s", offset = 10000)
     # print(genedata)
     # print(chrom_offsets)
     try:
