@@ -9,3 +9,4 @@ cp manhat_plot_s_and_p.py ~/mybin/manhat_plot_s_and_p
 cp tukey_s.py ~/mybin/tukey_s
 cp filter_goods ~/mybin/filter_goods
 cp combine_goods ~/mybin/combine_goods
+cp manhat_plot_tukey.py ~/mybin/manhat_plot_tukey
