@@ -46,9 +46,11 @@ estimateSH_one_win = function(sync, Ne= ? Double(), info= ? List(), chrompos= ? 
     # print(chrompos)
     # print("one_start:")
     # print(one_start)
-    Integer() ? span = one_start$index[1]:min(one_start$index[1] + winsize - 1, max(chrompos$index))
-    Character() ? chrom = chrompos$chrom[span]
-    Integer() ? pos = chrompos$pos[span]
+    Integer() ? span
+    Double() ? pos
+    span = one_start$index[1]:min(one_start$index[1] + winsize - 1, max(chrompos$index))
+    chrom = chrompos$chrom[span]
+    pos = chrompos$pos[span]
     # print("chrom:")
     # print(chrom)
     # print("pos:")
@@ -68,11 +70,13 @@ combine_est_sh_outputs <- List(2) ? function(full_output_list= ? List()) {
     return(list(chrom_pos, s_vals_list))
 }
 
-estimateSH_wins <- List(2) ? function(sync, Ne= ? Double(), info= ? List(), chrompos= ? Data.frame(), start_chrompos_chunk= ? Data.fram(), winsize= ? Integer()) {
+estimateSH_wins <- List(2) ? function(sync, Ne= ? Double(), info= ? List(), chrompos= ? Data.frame(), start_chrompos_chunk= ? Data.frame(), winsize= ? Integer()) {
     # print("nrow(start_chrompos_chunk):")
     # print(nrow(start_chrompos_chunk))
-    List() ? start_chrompos_chunk_list = split(start_chrompos_chunk, 1:nrow(start_chrompos_chunk))
-    List() ? s_vals = unname(mclapply(start_chrompos_chunk_list, function(x) {estimateSH_one_win(sync, Ne, info, chrompos, x, winsize)}))
+    List() ? start_chrompos_chunk_list
+    start_chrompos_chunk_list = split(start_chrompos_chunk, 1:nrow(start_chrompos_chunk))
+    List() ? s_vals
+    s_vals = unname(mclapply(start_chrompos_chunk_list, function(x) {estimateSH_one_win(sync, Ne, info, chrompos, x, winsize)}))
     # print("length(s_vals):")
     # print(length(s_vals))
     return(list(start_chrompos_chunk, s_vals))
@@ -127,7 +131,11 @@ gets_from_ests <- Double() ? function(ests= ? List()) {
     # print("ests:")
     # print(ests)
     List() ? s_vals
+    # print("ests:")
+    # print(ests)
     s_vals = mclapply(ests, function(x) {x$s})
+    # print("s_vals:")
+    # print(s_vals)
     return(unlist(s_vals))
 }
 
