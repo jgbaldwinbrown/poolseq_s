@@ -15,14 +15,14 @@ def plot_p(genedata: pd.DataFrame, chrom_offsets: pd.DataFrame, outpath: str, ym
         outpath,
         chrom_offsets,
         "p",
-        title="Probability of selection coefficient occurring randomly",
+        title="Tukey test probability of\ndifference in selection coefficient",
         yname = "-log10(p)",
         dims = (20, 6),
         scale = 1.5,
         log=True,
         named_xticks = True,
         chrom_col = "Scaffold",
-        geom = "line",
+        geom = "point",
         ylim = (ymin,ymax),
         color_col = "reject"
     )
@@ -47,6 +47,9 @@ def get_chr(s: str) -> str:
 def get_pos(s: str) -> int:
     return int(s.split(":")[1])
 
+def nlog10(f: float) -> float:
+	return -(math.log10(f))
+
 def main() -> None:
     data_inpath: str
     chrlen_bed_inpath: str
@@ -65,7 +68,7 @@ def main() -> None:
     gdata = mh.get_data_from_table(data_inpath, header_row = 0)
     gdata["Scaffold"] = gdata["chrpos"].apply(get_chr)
     gdata["Position"] = gdata["chrpos"].apply(get_pos)
-    gdata["p"] = gdata["p-adj"]
+    gdata["p"] = gdata["p-adj"].apply(nlog10)
     # try:
     #     gdata["nlogp"] = gdata["p"].apply(lambda x: -math.log10(x))
     # except:
