@@ -29,8 +29,8 @@ func bad_values(ints []int) bool {
 }
 
 func good_line(l []string) (ok bool, bads []int) {
-	var entry_str_arr [5]string
-	var entry_int_arr [5]int
+	var entry_str_arr [6]string
+	var entry_int_arr [6]int
 	entry_str := entry_str_arr[:0]
 	entry_int := entry_int_arr[:0]
 	total_nonzero := 0
