@@ -6,6 +6,7 @@
 # library("r-lib/backports")
 suppressMessages(library(utils))
 suppressMessages(library(backports))
+suppressMessages(library(data.table))
 deparse1 = getFromNamespace("deparse1", "backports")
 
 suppressMessages(library(poolSeq))
@@ -20,8 +21,8 @@ global_chunksize = 1000
 get_info <- List() ? function(infopath= ? Character()) {
     Data.frame() ? info_unstructured <- as.data.frame(fread(infopath, sep="\t", header=TRUE))
     # print(info_unstructured)
-    List() ? info <- vector(mode = "list", length = 10)
-    names(info) = c("chrom", "pos", "gen", "repl", "pool_size", "gen_levels", "repl_levels", "pool_size_levels", "chrom_levels", "pos_levels")
+    List() ? info <- vector(mode = "list", length = 14)
+    names(info) = c("chrom", "pos", "gen", "repl", "pool_size", "gen_levels", "repl_levels", "pool_size_levels", "chrom_levels", "pos_levels", "raw_chrom", "raw_pos", "raw_chrom_levels", "raw_pos_levels")
     info$gen = info_unstructured$gen
     info$repl = info_unstructured$repl
     info$pool_size = info_unstructured$pool_size
@@ -32,11 +33,16 @@ get_info <- List() ? function(infopath= ? Character()) {
     return(info)
 }
 
-update_info <- List() ? function(info= ? List(), sync) {
+update_info <- List() ? function(info= ? List(), sync, raw_sync= ? Data.frame()) {
     info$chrom = sync@alleles$chr
     info$pos = sync@alleles$pos
     info$chrom_levels = sort(levels(factor(info$chrom)))
     info$pos_levels = as.numeric(sort(levels(factor(info$pos))))
+
+    info$raw_chrom = raw_sync[,1]
+    info$raw_pos = raw_sync[,2]
+    info$raw_chrom_levels = sort(levels(factor(info$raw_chrom)))
+    info$raw_pos_levels = as.numeric(sort(levels(factor(info$raw_pos))))
     return(info)
 }
 
@@ -87,7 +93,7 @@ estimateSH_win_savewrapper <- List(2) ? function(sync, Ne= ? Double(), info= ? L
     Data.frame() ? all_starts
     List() ? all_starts
     List() ? full_output_list
-    chrompos = data.frame(chrom = info$chrom, pos = as.numeric(info$pos), index = as.numeric(1:length(info$chrom)))
+    chrompos = data.frame(chrom = info$raw_chrom, pos = as.numeric(info$raw_pos), index = as.numeric(1:length(info$raw_chrom)))
     chrompos = chrompos[order(chrompos[,"chrom"], chrompos["pos"]),]
     write.table(chrompos, "chrompos_temp.txt", sep="\t")
     all_starts = chrompos[seq(1,nrow(chrompos), winstep),]
@@ -250,7 +256,10 @@ main = function() {
     winstep = strtoi(args[5])
     info = get_info(infopath)
     mySync <- read.sync(file=syncpath, gen=info$gen, repl=info$repl)
-    info = update_info(info, mySync)
+    myRawSync <- as.data.frame(fread(syncpath))
+    info = update_info(info, mySync, myRawSync)
+    print(mySync)
+    print(info)
     
     outdir = paste(outpath, "_tempdir/", sep="")
     if (! dir.exists(outdir)) {
