@@ -12,3 +12,5 @@ cp filter_goods ~/mybin/filter_goods
 cp combine_goods ~/mybin/combine_goods
 cp manhat_plot_tukey.py ~/mybin/manhat_plot_tukey
 go build find_bad_sync_lines.go && cp find_bad_sync_lines ~/mybin/
+( cd ne_multi && go build ne_multi.go )
+cp ne_multi/ne_multi ~/mybin/ne_multi
