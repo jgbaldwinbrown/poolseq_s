@@ -1,6 +1,8 @@
 package main
 
 import (
+	"runtime"
+	"sync"
 	"bufio"
 	"github.com/montanaflynn/stats"
 	"fmt"
@@ -155,9 +157,16 @@ type flag_set struct {
 	repls int
 	info string
 	oprefix string
+	jobs int
 }
 
 type ne_t string
+
+type ne_out_t struct {
+	ne ne_t
+	repl_nes []ne_t
+	err error
+}
 
 func printexample() {
 	sourceconn, err := ioutil.TempFile(".", "simple")
@@ -187,6 +196,7 @@ func get_flags() (flags flag_set) {
 	flag.StringVar(&flags.info, "i", "", "Path of info file for this sync file.")
 	flag.StringVar(&flags.oprefix, "o", "ne_multi_out", "Output prefix (default = ne_multi_out).")
 	flag.IntVar(&flags.repls, "n", 1, "Number of replicates to perform.")
+	flag.IntVar(&flags.jobs, "j", 1, "Maximum number of parallel jobs.")
 	flag.Parse()
 	if flags.data == "" || flags.perc_keep_string == "" || flags.info == "" {
 		panic(fmt.Errorf("Error: missing argument.\n"))
@@ -291,15 +301,31 @@ func get_ne(datapath string, perc_keep float64, infopath string) (ne ne_t, repl_
 	return ne, repl_nes, err
 }
 
-func get_multi_nes(datapath string, randsource int, perc_keep float64, repls int, infopath string) (nes []ne_t, repl_nes [][]ne_t, err error) {
-	rand.New(rand.NewSource(int64(randsource)))
-	for i:=0; i<repls; i++ {
-		ne, repl_ne, err := get_ne(datapath, perc_keep, infopath)
-		if err != nil { return nes, repl_nes, err }
-		nes = append(nes, ne)
-		repl_nes = append(repl_nes, repl_ne)
+func get_ne_parallel(datapath string, perc_keep float64, infopath string, ne_out *ne_out_t, parent_wg *sync.WaitGroup) {
+	defer parent_wg.Done()
+	ne_out.ne, ne_out.repl_nes, ne_out.err = get_ne(datapath, perc_keep, infopath)
+}
+
+func split_outs(ne_outs []ne_out_t) (nes []ne_t, repl_nes [][]ne_t, err error) {
+	for _, out := range ne_outs {
+		nes = append(nes, out.ne)
+		repl_nes = append(repl_nes, out.repl_nes)
+		if out.err != nil { return nes, repl_nes, err }
 	}
 	return nes, repl_nes, nil
+}
+
+func get_multi_nes(datapath string, randsource int, perc_keep float64, repls int, infopath string) (nes []ne_t, repl_nes [][]ne_t, err error) {
+	rand.New(rand.NewSource(int64(randsource)))
+	var wg sync.WaitGroup
+	ne_outs := make([]ne_out_t, repls)
+	for i:=0; i<repls; i++ {
+		wg.Add(1)
+		go get_ne_parallel(datapath, perc_keep, infopath, &ne_outs[i], &wg)
+	}
+	wg.Wait()
+	nes, repl_nes, err = split_outs(ne_outs)
+	return nes, repl_nes, err
 }
 
 func print_nes(nes []ne_t, path string) (err error) {
@@ -377,6 +403,12 @@ func print_floats(floats []float64, path string) (err error) {
 
 func main() {
 	flags := get_flags()
+
+	native_jobs := runtime.GOMAXPROCS(-1)
+	if flags.jobs < native_jobs {
+		runtime.GOMAXPROCS(flags.jobs)
+	}
+
 	nes, repl_nes, err := get_multi_nes(flags.data, flags.randsource, flags.perc_keep, flags.repls, flags.info)
 	if err != nil { panic(err) }
 
@@ -397,3 +429,14 @@ func main() {
 	err = print_floats(mean_repls(floatify_repls(repl_nes)), repl_mean_ne_path)
 	if err != nil { panic(err) }
 }
+
+
+/*
+    for i := 0; i < len(move_vecs); i++ {
+        new_state := s.update(move_vecs[i])
+        wg.Add(1)
+        go new_state.score_parallel(&wg, depth - 1, planned_moves, &return_scores[i])
+    }
+
+    wg.Wait()
+*/
