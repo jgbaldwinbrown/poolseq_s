@@ -196,6 +196,7 @@ update_info <- List() ? function(info= ? List(), sync, raw_sync= ? Data.frame())
 }
 
 main = function() {
+    write(0, stderr())
     
     Character() ? args
     Character(1) ? syncpath
@@ -243,7 +244,9 @@ main = function() {
     }
     
     est_nes = as.numeric(rep(NA, length(info$repl_levels)))
+    write(1, stderr())
     for (repl in info$repl_levels) {
+        write(2, stderr())
         myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
         myCov_repltemp = coverage(mySync, info$chrom, info$pos, repl=repl, gen=info$gen_levels)
         # gen1 = info$gen_levels[1]
@@ -255,6 +258,7 @@ main = function() {
         cov_gen1_name = paste("F", as.character(gen1), ".R", as.character(repl), ".cov", sep="")
         cov_gen2_name = paste("F", as.character(gen2), ".R", as.character(repl), ".cov", sep="")
         repl_ne_outpath = paste(outpath, "_repl", as.character(repl), ".txt", sep="")
+        write(3, stderr())
         est_nes[repl] = estimateNe(
             p0=myTraj_repltemp[,traj_gen1_name], 
             pt=myTraj_repltemp[,traj_gen2_name], 
@@ -264,12 +268,15 @@ main = function() {
             method=c("P.planII"),
             poolSize=c(pool1, pool2)
         )
+        write(4, stderr())
+	write(paste("writing to ", repl_ne_outpath, sep = ""), stderr())
         write(est_nes[repl], repl_ne_outpath, sep = "\t")
         # note: add options when ready: Ncensus=1000, poolSize=c(300, 300)
     }
     
     mean_ne = mean(est_nes)
     mean_ne_outpath = paste(outpath, ".txt", sep="")
+    print(paste("writing to ", mean_ne_outpath, sep = ""))
     write(mean_ne, mean_ne_outpath, sep = "\t")
     
 }
@@ -382,7 +389,7 @@ func parse_ne(path string) (ne ne_t, err error) {
 func parse_time_ne(path string) (ne time_ne_t, err error) {
 	err = nil
 	conn, err := os.Open(path)
-	timere := regexp.MustCompile(`.*start([0-9]*).*end([0-9])`)
+	timere := regexp.MustCompile(`.*start([0-9]*).*end([0-9]*)`)
 	if err != nil { return ne, err }
 	defer conn.Close()
 	s := bufio.NewScanner(conn)
@@ -411,7 +418,7 @@ func parse_nes(paths ...string) (nes []ne_t, err error) {
 func parse_time_nes(paths ...string) (time_nes []time_ne_t, err error) {
 	for _, path := range paths {
 		ne, err := parse_time_ne(path)
-		if err != nil { return time_nes, err }
+		if err != nil { fmt.Println("%s\n", err); return time_nes, err }
 		time_nes = append(time_nes, ne)
 	}
 	return time_nes, nil
@@ -420,7 +427,7 @@ func parse_time_nes(paths ...string) (time_nes []time_ne_t, err error) {
 func calc_nes(datapath string, infopath string) (ne ne_t, repl_nes []ne_t, err error) {
 	outdir, err := ioutil.TempDir(".", "ne_multi")
 	if err != nil { return ne, repl_nes, err }
-	defer os.RemoveAll(outdir)
+	// defer os.RemoveAll(outdir)
 
 	sourceconn, err := ioutil.TempFile(".", "ne_multi_source")
 	if err != nil { return ne, repl_nes, err }
@@ -449,16 +456,16 @@ func calc_nes(datapath string, infopath string) (ne ne_t, repl_nes []ne_t, err e
 func calc_time_nes(datapath string, infopath string) (time_ne []time_ne_t, repl_time_nes []time_ne_t, err error) {
 	outdir, err := ioutil.TempDir(".", "ne_multi")
 	if err != nil { return time_ne, repl_time_nes, err }
-	defer os.RemoveAll(outdir)
+	// defer os.RemoveAll(outdir)
 
 	sourceconn, err := ioutil.TempFile(".", "ne_multi_time_source")
 	if err != nil { return time_ne, repl_time_nes, err }
 	sourcepath := sourceconn.Name()
 	defer os.Remove(sourcepath)
-	fmt.Fprintln(sourceconn, source)
+	fmt.Fprintln(sourceconn, source_specify_gens)
 	sourceconn.Close()
 
-	times := []int{0, 6, 12, 18, 24, 30, 36, 42, 48, 54}
+	times := []int{0, 6, 12, 18, 24, 30, 36, 42, 48}
 	var replpaths []string
 	var meanpaths []string
 
@@ -466,7 +473,9 @@ func calc_time_nes(datapath string, infopath string) (time_ne []time_ne_t, repl_
 		time_0 := times[time_t_i-1]
 		time_t := times[time_t_i]
 		outpref := fmt.Sprintf("%s/ne_start%v_end%v", outdir, time_0, time_t)
-		command := exec.Command("Rscript", sourcepath, datapath, infopath, fmt.Sprintf("%v", time_0), fmt.Sprintf("%v", time_t), outdir + "/ne")
+		command := exec.Command("Rscript", sourcepath, datapath, infopath, fmt.Sprintf("%v", time_0), fmt.Sprintf("%v", time_t), outpref)
+		command.Stdout = os.Stdout
+		command.Stderr = os.Stderr
 		err = command.Run()
 		if err != nil { return time_ne, repl_time_nes, err }
 		meanpaths = append(meanpaths, outpref + ".txt")
@@ -478,7 +487,9 @@ func calc_time_nes(datapath string, infopath string) (time_ne []time_ne_t, repl_
 
 	time_ne, err = parse_time_nes(meanpaths...)
 	if err != nil { return time_ne, repl_time_nes, err }
+	fmt.Println("replpaths:", replpaths)
 	repl_time_nes, err = parse_time_nes(replpaths...)
+	fmt.Println(repl_time_nes)
 	if err != nil { return time_ne, repl_time_nes, err }
 
 	return time_ne, repl_time_nes, nil
@@ -512,6 +523,8 @@ func get_ne_parallel(datapath string, perc_keep float64, infopath string, ne_out
 func get_time_ne_parallel(datapath string, perc_keep float64, infopath string, time_ne_out *time_ne_out_t, parent_wg *sync.WaitGroup) {
 	defer parent_wg.Done()
 	time_ne_out.ne, time_ne_out.repl_nes, time_ne_out.err = get_time_ne(datapath, perc_keep, infopath)
+	fmt.Println("time_ne_out:", time_ne_out)
+	fmt.Printf("time_ne_out.err: %s\n", time_ne_out.err)
 }
 
 func split_outs(ne_outs []ne_out_t) (nes []ne_t, repl_nes [][]ne_t, err error) {
@@ -632,7 +645,7 @@ func mean_repls(nes [][]float64) (means []float64) {
 }
 
 func mean_time_nes(time_nes []time_ne_t) (means []time_ne_t, err error) {
-	times := []string{"0", "6", "12", "18", "24", "30", "36", "42", "48", "54"}
+	times := []string{"0", "6", "12", "18", "24", "30", "36", "42", "48"}
 	if len(time_nes) < 1 {
 		return means, fmt.Errorf("Error: length less than 1.\n")
 	}
@@ -653,7 +666,7 @@ func mean_time_nes(time_nes []time_ne_t) (means []time_ne_t, err error) {
 }
 
 func mean_repl_time_nes(time_nes []time_ne_t) (means []time_ne_t, err error) {
-	times := []string{"0", "6", "12", "18", "24", "30", "36", "42", "48", "54"}
+	times := []string{"0", "6", "12", "18", "24", "30", "36", "42", "48"}
 	if len(time_nes) < 1 {
 		return means, fmt.Errorf("Error: time_nes too short.")
 	}
