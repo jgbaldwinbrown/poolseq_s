@@ -154,7 +154,7 @@ getp_from_ests <- Double() ? function(ests= ? List()) {
 est_full_save_win <- Data.frame() ? function(sync, Ne= ? Double(), info= ? List(), outpath= ? Character(1), winsize= ? Integer(1), winstep= ? Integer(1)) {
     List(2) ? est_list
     est_list <- estimateSH_win_savewrapper(sync, Ne, info, outpath, winsize, winstep)
-    List() ? chrom_pos
+    Data.frame() ? chrom_pos
     List() ? est_all_p
     Double() ? s_vals
     Double() ? p_vals
@@ -169,6 +169,7 @@ est_full_save_win <- Data.frame() ? function(sync, Ne= ? Double(), info= ? List(
     p_vals = getp_from_ests(est_all_p)
     # print(s_vals)
     # print(p_vals)
+    print(str(chrom_pos))
     out = as.data.frame(cbind(chrom_pos[,c("chrom", "pos")], s_vals, p_vals))
     # print(out)
     colnames(out) = c("chrom", "pos", "s", "p.value")
