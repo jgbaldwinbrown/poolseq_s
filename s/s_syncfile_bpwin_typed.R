@@ -45,14 +45,19 @@ slide_data = List() ? function(wins= ? Data.frame(), data= ? Data.frame(), chrco
 get_info <- List() ? function(infopath= ? Character()) {
     Data.frame() ? info_unstructured <- as.data.frame(fread(infopath, sep="\t", header=TRUE))
     # print(info_unstructured)
-    List() ? info <- vector(mode = "list", length = 14)
-    names(info) = c("chrom", "pos", "gen", "repl", "pool_size", "gen_levels", "repl_levels", "pool_size_levels", "chrom_levels", "pos_levels", "raw_chrom", "raw_pos", "raw_chrom_levels", "raw_pos_levels")
+    info_names = c("chrom", "pos", "gen", "repl", "pool_size", "ne",
+        "gen_levels", "repl_levels", "pool_size_levels", "ne_levels",
+        "chrom_levels", "pos_levels", "raw_chrom", "raw_pos", "raw_chrom_levels", "raw_pos_levels")
+    List() ? info <- vector(mode = "list", length = length(info_names))
+    names(info) = info_names
     info$gen = info_unstructured$gen
     info$repl = info_unstructured$repl
     info$pool_size = info_unstructured$pool_size
+    info$ne = info_unstructured$ne
     info$gen_levels = sort(as.numeric(levels(factor(info_unstructured$gen))))
     info$repl_levels = sort(as.numeric(levels(factor(info_unstructured$repl))))
     info$pool_size_levels = sort(as.numeric(levels(factor(info_unstructured$pool_size))))
+    info$ne_levels = sort(as.numeric(levels(factor(info_unstructured$ne))))
     # print(info)
     return(info)
 }
@@ -225,7 +230,7 @@ est_full_save_win <- Data.frame() ? function(sync, Ne= ? Double(), info= ? List(
     return(out)
 }
 
-est_full_save_repls_win <- List() ? function(sync, Ne= ? Double(), info= ? List(), outpath= ? Character(1), winsize= ? Integer(1), winstep= ? Integer(1)) {
+est_full_save_repls_win <- List() ? function(sync, Nes= ? Double(), info= ? List(), outpath= ? Character(1), winsize= ? Integer(1), winstep= ? Integer(1)) {
     List() ? out
     List() ? temp_info
     Character(1) ? outdir
@@ -245,7 +250,7 @@ est_full_save_repls_win <- List() ? function(sync, Ne= ? Double(), info= ? List(
         }
 
         repl_outpath = paste(outpath, "_repl", as.character(temp_info$repl_levels), sep="")
-        est_list <- estimateSH_win_savewrapper(sync, Ne, temp_info, repl_outpath, winsize, winstep)
+        est_list <- estimateSH_win_savewrapper(sync, Nes[i], temp_info, repl_outpath, winsize, winstep)
         # print("est_list:")
         # print(est_list)
         # print("str(est_list):")
@@ -315,51 +320,52 @@ main = function() {
         dir.create(outdir)
     }
     
-    est_nes = as.numeric(rep(NA, length(info$repl_levels)))
-    for (repl in info$repl_levels) {
-        myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
-        myCov_repltemp = coverage(mySync, info$chrom, info$pos, repl=repl, gen=info$gen_levels)
-        gen1 = info$gen_levels[1]
-        gen2 = info$gen_levels[length(info$gen_levels)]
-        pool1 = info$pool_size[info$gen == gen1 & info$repl == repl]
-        pool2 = info$pool_size[info$gen == gen2 & info$repl == repl]
-        traj_gen1_name = paste("F", as.character(gen1), sep="")
-        traj_gen2_name = paste("F", as.character(gen2), sep="")
-        cov_gen1_name = paste("F", as.character(gen1), ".R", as.character(repl), ".cov", sep="")
-        cov_gen2_name = paste("F", as.character(gen2), ".R", as.character(repl), ".cov", sep="")
-        repl_ne_outpath = paste(outdir, outpath, "_", cov_gen1_name, "_ne.txt", sep="")
-        repl_ne_outpath_done = paste(outdir, outpath, "_", cov_gen1_name, "_ne.txt.done", sep="")
-        if (file.exists(repl_ne_outpath_done)) {
-            est_nes[repl] = scan(repl_ne_outpath)
-        } else {
-            est_nes[repl] = estimateNe(
-                p0=myTraj_repltemp[,traj_gen1_name], 
-                pt=myTraj_repltemp[,traj_gen2_name], 
-                cov0=myCov_repltemp[,cov_gen1_name], 
-                covt=myCov_repltemp[,cov_gen2_name], 
-                t=info$gen_levels[length(info$gen_levels)] - info$gen_levels[1],
-                method=c("P.planII"),
-                poolSize=c(pool1, pool2)
-            )
-            write(est_nes[repl], repl_ne_outpath, sep = "\t")
-            write(est_nes[repl], repl_ne_outpath_done, sep = "\t")
-        }
-        # note: add options when ready: Ncensus=1000, poolSize=c(300, 300)
-    }
+    # est_nes = as.numeric(rep(NA, length(info$repl_levels)))
+    # for (repl in info$repl_levels) {
+    #     myTraj_repltemp = af.traj(mySync, info$chrom, info$pos, repl)
+    #     myCov_repltemp = coverage(mySync, info$chrom, info$pos, repl=repl, gen=info$gen_levels)
+    #     gen1 = info$gen_levels[1]
+    #     gen2 = info$gen_levels[length(info$gen_levels)]
+    #     pool1 = info$pool_size[info$gen == gen1 & info$repl == repl]
+    #     pool2 = info$pool_size[info$gen == gen2 & info$repl == repl]
+    #     traj_gen1_name = paste("F", as.character(gen1), sep="")
+    #     traj_gen2_name = paste("F", as.character(gen2), sep="")
+    #     cov_gen1_name = paste("F", as.character(gen1), ".R", as.character(repl), ".cov", sep="")
+    #     cov_gen2_name = paste("F", as.character(gen2), ".R", as.character(repl), ".cov", sep="")
+    #     repl_ne_outpath = paste(outdir, outpath, "_", cov_gen1_name, "_ne.txt", sep="")
+    #     repl_ne_outpath_done = paste(outdir, outpath, "_", cov_gen1_name, "_ne.txt.done", sep="")
+    #     if (file.exists(repl_ne_outpath_done)) {
+    #         est_nes[repl] = scan(repl_ne_outpath)
+    #     } else {
+    #         est_nes[repl] = estimateNe(
+    #             p0=myTraj_repltemp[,traj_gen1_name], 
+    #             pt=myTraj_repltemp[,traj_gen2_name], 
+    #             cov0=myCov_repltemp[,cov_gen1_name], 
+    #             covt=myCov_repltemp[,cov_gen2_name], 
+    #             t=info$gen_levels[length(info$gen_levels)] - info$gen_levels[1],
+    #             method=c("P.planII"),
+    #             poolSize=c(pool1, pool2)
+    #         )
+    #         write(est_nes[repl], repl_ne_outpath, sep = "\t")
+    #         write(est_nes[repl], repl_ne_outpath_done, sep = "\t")
+    #     }
+    #     # note: add options when ready: Ncensus=1000, poolSize=c(300, 300)
+    # }
+    # 
+    # ne_outpath = paste(outdir, outpath, "_ne.txt", sep="")
+    # ne_outpath_done = paste(outdir, outpath, "_ne.txt.done", sep="")
+    # write(est_nes, ne_outpath, sep = "\t")
+    # write(est_nes, ne_outpath_done, sep = "\t")
+    # 
+    # mean_ne = mean(est_nes)
+    # mean_ne_outpath = paste(outdir, outpath, "_mean_ne.txt", sep="")
+    # mean_ne_outpath_done = paste(outdir, outpath, "_mean_ne.txt.done", sep="")
+    # write(mean_ne, mean_ne_outpath, sep = "\t")
+    # write(mean_ne, mean_ne_outpath_done, sep = "\t")
     
-    ne_outpath = paste(outdir, outpath, "_ne.txt", sep="")
-    ne_outpath_done = paste(outdir, outpath, "_ne.txt.done", sep="")
-    write(est_nes, ne_outpath, sep = "\t")
-    write(est_nes, ne_outpath_done, sep = "\t")
-    
-    mean_ne = mean(est_nes)
-    mean_ne_outpath = paste(outdir, outpath, "_mean_ne.txt", sep="")
-    mean_ne_outpath_done = paste(outdir, outpath, "_mean_ne.txt.done", sep="")
-    write(mean_ne, mean_ne_outpath, sep = "\t")
-    write(mean_ne, mean_ne_outpath_done, sep = "\t")
-    
+    mean_ne = mean(info$ne_levels)
     out = est_full_save_win(mySync, mean_ne, info, outpath, winsize, winstep)
-    out_repls = est_full_save_repls_win(mySync, mean_ne, info, outpath, winsize, winstep)
+    out_repls = est_full_save_repls_win(mySync, Nes = info$ne[order(match(info$ne, info$repl))], info, outpath, winsize, winstep)
     write.table(out, outpath, sep="\t", quote=FALSE, row.names=FALSE)
     for (i in 1:length(out_repls)) {
         write.table(out_repls[[i]], paste(outpath, "_repl", info$repl_levels[i], sep=""), sep="\t", quote=FALSE, row.names=FALSE)
